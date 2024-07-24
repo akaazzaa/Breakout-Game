@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Spiel.Model
+namespace Spiel.System
 {
     public class Level
     {

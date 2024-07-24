@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Spiel
+﻿namespace Spiel.System
 {
     public class Vec2
     {
@@ -23,12 +17,12 @@ namespace Spiel
 
         public bool Gleich(Vec2 rhs)
         {
-            return (x == rhs.x && y == rhs.y);
+            return x == rhs.x && y == rhs.y;
         }
 
         public bool UnGleich(Vec2 rhs)
         {
-            return (x != rhs.x && y != rhs.y);
+            return x != rhs.x && y != rhs.y;
         }
 
         public Vec2 Plus(Vec2 rhs)

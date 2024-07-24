@@ -1,5 +1,4 @@
-﻿
-using Spiel.Model;
+﻿using Spiel.System;
 
 namespace Spiel
 {
@@ -9,16 +8,14 @@ namespace Spiel
         {
             Game game = new Game();
 
-            float windowWidth = 1000;
-            float windowHeight = 1000;
-
-            Level level1 = new Level(5, 10, 40, 20, 5, 5,0,0);
-            game.CreateLevel(level1, windowWidth, windowHeight);
+            // 1: Rows , 1: Column ,
+            Level level1 = new Level(13, 15, 0, 0, 40, 20,0,0);
+            game.CreateLevel(level1);
             game.Run();
 
 
             Level level2 = new Level(10, 50, 40, 20, 5, 5, 0, 0);
-            game.CreateLevel(level1, windowWidth, windowHeight);
+            game.CreateLevel(level2);
             game.Run();
 
         }
