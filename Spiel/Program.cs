@@ -6,6 +6,8 @@ namespace Spiel
     {
         static void Main(string[] args)
         {
+            Menu menu = new Menu();
+            menu.MenuStart();
             Game game = new Game();
 
             // 1: Rows , 1: Column ,

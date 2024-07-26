@@ -12,7 +12,7 @@ namespace Spiel.System
 
         public List<Entity> entities = new List<Entity>();
         public Dictionary<string, List<Entity>> entitiesByTag = new Dictionary<string, List<Entity>>(); // <tag, entity
-        public List<Entity> toAdd = new List<Entity>();
+        
 
         public uint totalEntities = 0;
 
@@ -20,18 +20,14 @@ namespace Spiel.System
 
         public void Update()
         {
-            foreach (Entity e in toAdd)
-            {
-                entities.Add(e);
-
-            }
+            
             RemoveDeadEntities(entities);
 
             foreach (var tag in entitiesByTag)
             {
                 RemoveDeadEntities(tag.Value);
             }
-            toAdd.Clear();
+           
         }
 
         public void RemoveDeadEntities(List<Entity> entities)
@@ -42,8 +38,6 @@ namespace Spiel.System
                 {
                     entities.RemoveAt(i);
                 }
-
-
             }
         }
 
@@ -57,7 +51,7 @@ namespace Spiel.System
         public Entity AddEntity(string tag)
         {
             Entity e = new Entity(totalEntities++, tag);
-            toAdd.Add(e);
+            entities.Add(e);
             if (!entitiesByTag.ContainsKey(tag))
             {
                 entitiesByTag.Add(e._tag, new List<Entity> { e });

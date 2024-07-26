@@ -115,6 +115,7 @@ namespace Spiel.System
         };
         public static Dictionary<int, string> background = new Dictionary<int, string>()
         {
+            {8,"C:\\Users\\dgami\\source\\repos\\Spiel\\Spiel\\Sprites\\Background\\Background.jpg" },
             {0,"C:\\Users\\dgami\\source\\repos\\Spiel\\Spiel\\Sprites\\Background\\Backround_Tiles_0.png" },
             {1,"C:\\Users\\dgami\\source\\repos\\Spiel\\Spiel\\Sprites\\Background\\Backround_Tiles_1.png" },
             {2,"C:\\Users\\dgami\\source\\repos\\Spiel\\Spiel\\Sprites\\Background\\Backround_Tiles_2.png" },
@@ -124,12 +125,22 @@ namespace Spiel.System
             {6,"C:\\Users\\dgami\\source\\repos\\Spiel\\Spiel\\Sprites\\Background\\Backround_Tiles_6.png" },
             {7,"C:\\Users\\dgami\\source\\repos\\Spiel\\Spiel\\Sprites\\Background\\Backround_Tiles_7.png" },
         };
-
+        public static Dictionary<string, string> ui = new Dictionary<string, string>()
+        {
+            {"Red","C:\\Users\\dgami\\source\\repos\\Spiel\\Spiel\\UI\\Red.png"},
+            {"Blue","C:\\Users\\dgami\\source\\repos\\Spiel\\Spiel\\UI\\Red.png" }
+        };
         public static string GetPath(string key, Dictionary<string, string> source)
         {
 
             return source[key];
             
+        }
+        public static string GetPath(int key, Dictionary<int, string> source)
+        {
+
+            return source[key];
+
         }
     }   
 

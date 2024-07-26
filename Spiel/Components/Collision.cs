@@ -1,4 +1,6 @@
-﻿using Spiel.System;
+﻿using SFML.Graphics;
+using SFML.System;
+using Spiel.System;
 
 namespace Spiel.Components
 {
@@ -15,14 +17,35 @@ namespace Spiel.Components
         }
         public Collision(float raduis) { this.raduis = raduis; }
 
-        public static bool CheckCollision(Vec2 pos1,float radius, Vec2 pos2, float width, float height)
-        {
-            float dist = (float)pos1.Distanc(pos2);
-            if (dist < radius )
+      public static int CheckCollision(CircleShape ball, RectangleShape rect)
+      {
+            float closetX = Clamp(ball.Position.X, rect.Position.X,rect.Position.X + rect.Size.X);
+            float closetY = Clamp(ball.Position.Y, rect.Position.Y,rect.Position.Y + rect.Size.Y);
+
+            float distanceX = ball.Position.X - closetX;
+            float distanceY = ball.Position.Y - closetY;
+
+            float distanceSquared = (distanceX * distanceX) + (distanceY * distanceY);
+            if (distanceSquared < ball.Radius * ball.Radius && closetX != ball.Position.X && closetY != ball.Position.Y) 
             {
-                return true;
+                return 3;
             }
-            return false;
+            else if(distanceSquared < ball.Radius * ball.Radius && closetX == ball.Position.X) 
+            {
+                return 2;
+            }else if (distanceSquared < ball.Radius * ball.Radius && closetY == ball.Position.Y)
+            {
+                return 1;
+            }
+
+            else return 0;
+
+      }
+        public static float Clamp(float value, float min, float max)
+        {
+            if (value < min) return min;
+            if (value > max) return max;
+            return value;
         }
 
     }

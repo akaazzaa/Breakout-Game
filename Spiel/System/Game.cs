@@ -1,11 +1,14 @@
-﻿using SFML.Graphics;
+﻿using InstilledBee.SFML.SimpleCollision;
+using SFML.Graphics;
 using SFML.Graphics.Glsl;
 using SFML.System;
 using SFML.Window;
 using Spiel.Model;
+using System.ComponentModel;
 using System.Net.Http.Headers;
 using System.Net.WebSockets;
 using System.Numerics;
+using System.Reflection.Metadata;
 
 
 
@@ -19,20 +22,22 @@ namespace Spiel.System
         bool _isRunning = true;
         Entity Player;
         Entity Ball;
+        Sprite background;
+        Entity TestStone;
         EntityManager EntityManager = new EntityManager();
-
+       
         public Game()
         {
             Init();
         }
         public void CreateLevel(Level level)
         {
-            // Konstanten für Skalierung und Fenstergröße
+            //Konstanten für Skalierung und Fenstergröße
             const float SCALE_FACTOR = 2.0f;
 
             // Laden der Textur
             Texture texture = new Texture(Source.GetPath("bigGreenBrick", Source.bigBricks));
-
+            CollisionTester.AddBitMask(texture);
             // Dynamische Berechnung der Blockgrößen basierend auf der Texturgröße
             float blockWidth = texture.Size.X * SCALE_FACTOR;
             float blockHeight = texture.Size.Y * SCALE_FACTOR;
@@ -40,11 +45,6 @@ namespace Spiel.System
             // Berechnungen für die Startkoordinaten
             float xStart = (_wWidth - (level.Columns * (blockWidth + level.HorizontalSpacing) - level.HorizontalSpacing)) / 2;
             float yStart = (_wHeight / 3) - (level.Rows * (blockHeight + level.VerticalSpacing) - level.VerticalSpacing) / 2;
-
-            CreateBall();
-            spawnplayer();
-             
-            
 
             for (int row = 0; row < level.Rows; row++)
             {
@@ -56,15 +56,16 @@ namespace Spiel.System
 
                     // Erstellung und Initialisierung der Steine
                     Entity stone = EntityManager.AddEntity("Stone");
-                    stone.Sprite = new Sprite(texture);
-                    stone.Sprite.Scale = new Vector2f(SCALE_FACTOR, SCALE_FACTOR);
+                    stone.Rectangle = new RectangleShape(new Vector2f(texture.Size.X, texture.Size.Y));
+                    stone.Rectangle.Texture = texture;
+                    stone.Rectangle.Scale = new Vector2f(SCALE_FACTOR, SCALE_FACTOR);
                     stone.Transform = new Components.Transform(new Vec2(posX, posY), new Vec2(0, 0));
                     stone.Collision = new Components.Collision(blockWidth, blockHeight);
                 }
             }
-
+            CreateBall();
+            spawnplayer();
         }
-
         void Init()
         {
             _wWidth = 1920;
@@ -77,67 +78,78 @@ namespace Spiel.System
             _window.KeyReleased += new EventHandler<KeyEventArgs>(OnKeyRelease);
             _window.Closed += new EventHandler(OnClose);
 
+            background = new Sprite(new Texture(Source.GetPath(8, Source.background)));
+            
         }
-
         private void CreateBall()
         {
             Texture texture = new Texture(Source.GetPath("bigBallBraun", Source.balls));
-
+            CollisionTester.AddBitMask(texture);
             Entity ball = EntityManager.AddEntity("Ball");
-            ball.Sprite = new Sprite(texture);
-            ball.Sprite.Scale = new Vector2f(2, 2);
-            ball.Transform = new Components.Transform(new Vec2(_wWidth / 2, _wHeight / 2), new Vec2(1, -1));
-            ball.Collision = new Components.Collision(ball.Sprite.Texture.Size.X, ball.Sprite.Texture.Size.Y);
+
+            ball.Circle = new CircleShape(texture.Size.Y / 2);
+            ball.Circle.Texture = texture;
+            ball.Transform = new Components.Transform(new Vec2(_wWidth / 2, _wHeight - 50), new Vec2(5, -5));
+            ball.Collision = new Components.Collision(ball.Circle.Texture.Size.X , ball.Circle.Texture.Size.Y);
             Ball = ball;
         }
-
         private void spawnplayer()
         {
             Texture texture = new Texture(Source.GetPath("RedPaddelForm2", Source.paddels));
+            
             Entity player = EntityManager.AddEntity("Player");
-            player.Sprite = new Sprite(texture);
-            player.Sprite.Scale = new Vector2f(4, 4);
-            player.Transform = new Components.Transform(new Vec2(_wWidth / 2, _wHeight / 2), new Vec2(5, 5));
-            player.Collision = new Components.Collision(player.Sprite.Texture.Size.X, player.Sprite.Texture.Size.Y);
+
+            player.Rectangle = new RectangleShape(new Vector2f(texture.Size.X + 60, texture.Size.Y + 30));
+            player.Rectangle.Texture = texture;
+            
+            player.Transform = new Components.Transform(new Vec2(_wWidth / 2, _wHeight - 50), new Vec2(5, 5));
+            player.Collision = new Components.Collision(player.Rectangle.Texture.Size.X, player.Rectangle.Texture.Size.Y);
             player.Input = new Components.Input();
             Player = player;
         }
         void Movement()
         {
             Player.Transform.velocity = new Vec2(0, 0);
-
+            // Movement recht links
             if (Player.Input.left && Player.Transform.pos.x > -1)
             { Player.Transform.velocity.x = -10.0f; }
-
             if (Player.Input.right && Player.Transform.pos.x + Player.Collision.x * 4 < _wWidth)
             { Player.Transform.velocity.x = 10.0f; }
 
+            //Movement hoch runter
+            if ((Player.Input.up))
+            {
+                Player.Transform.velocity.y = -10.0f;
+            }
+
+            if ((Player.Input.down))
+            {
+                Player.Transform.velocity.y = 10.0f;
+            }
+            
+            // Bewgenung der Objekte
             Player.Transform.pos.x += Player.Transform.velocity.x;
-            Player.Transform.pos.y += 0;
+            Player.Transform.pos.y += Player.Transform.velocity.y;
 
             Ball.Transform.pos.x += Ball.Transform.velocity.x;
             Ball.Transform.pos.y += Ball.Transform.velocity.y;
 
-            if (Ball.Transform.pos.y <= -1)
+            //Überprüfung der Kollision mit den Wänden
+            if (Ball.Transform.pos.x <= 0 || Ball.Transform.pos.x >= _wWidth - Ball.Circle.Texture.Size.X)
+                Ball.Transform.velocity.x = -Ball.Transform.velocity.x;
+
+            if (Ball.Transform.pos.y <= 0)
+                Ball.Transform.velocity.y = -Ball.Transform.velocity.y;
+
+            // // Überprüfe, ob der Ball das untere Ende erreicht
+            if (Ball.Transform.pos.y > _wHeight)
             {
-                Ball.Transform.velocity.y = +5.0f;
-            }
-            else if (Ball.Transform.pos.y > _wHeight)
-            {
-                Ball.Transform.pos.x = _wWidth / 2;
-                Ball.Transform.pos.y = _wHeight / 2;
-            }
-            else if (Ball.Transform.pos.x <= -1)
-            {
-                Ball.Transform.velocity.x = +5.0f;
-            }
-            else if (Ball.Transform.pos.x >= _wWidth - Ball.Collision.x * 2)
-            {
-                Ball.Transform.velocity.x = -5.0f;
+                Ball.Transform.velocity.y = -Ball.Transform.velocity.y;
+                //Ball.Transform.pos.x = _wWidth / 2;
+                //Ball.Transform.pos.y = _wHeight / 2;
             }
 
         }
-
         private void OnKeyPressed(object? sender, KeyEventArgs e)
         {
             switch (e.Code)
@@ -148,13 +160,17 @@ namespace Spiel.System
                 case Keyboard.Key.A:
                     Player.Input.left = true;
                     break;
-
+                case Keyboard.Key.W:
+                    Player.Input.up = true;
+                    break ;
+                case Keyboard.Key.S:
+                    Player.Input.down = true;
+                    break;
                 case Keyboard.Key.D:
                     Player.Input.right = true;
                     break;
             }
         }
-
         private void OnKeyRelease(object? sender, KeyEventArgs e)
         {
             switch (e.Code)
@@ -162,12 +178,17 @@ namespace Spiel.System
                 case Keyboard.Key.A:
                     Player.Input.left = false;
                     break;
+                case Keyboard.Key.W:
+                    Player.Input.up = false;
+                    break;
+                case Keyboard.Key.S:
+                    Player.Input.down = false;
+                    break; 
                 case Keyboard.Key.D:
                     Player.Input.right = false;
                     break;
             }
         }
-
         void OnClose(object? sender, EventArgs e)
         {
             RenderWindow window = (RenderWindow)sender;
@@ -178,43 +199,97 @@ namespace Spiel.System
         {
             _window.DispatchEvents();
         }
-        void SCollision()
+        void Collision()
         {
-            //foreach (Stone stone in stoneManager.stones)
-            //{
-            //    if (Components.Collision.CheckCollision(Ball.transform.pos, Ball.collision.raduis, stone.Transform.pos, stone.Collision.width,stone.Collision.height))
-            //    {
-            //        stone.Destroy();
-            //    }
-            //}
-        }
+            
+            if (EntityManager.entitiesByTag.ContainsKey("Stone"))
+            {
+                foreach (Entity stone in EntityManager.GetEntitiesByTag("Stone"))
+                {
+                    switch(Components.Collision.CheckCollision(Ball.Circle,stone.Rectangle))
+                    {
+                        //No hit 
+                        case 0:Console.WriteLine("no hit");
+                            break;
+                            // hit left or right 
+                        case 1:Console.WriteLine("left right");
+                            stone.Hit();
+                            Ball.Transform.velocity.x = -Ball.Transform.velocity.x;
+                            break;
+                            // hit top or bottm
+                        case 2: Console.WriteLine("top bottom");
+                            Ball.Transform.velocity.y = -Ball.Transform.velocity.y;
+                            stone.Hit();
+                            break;
+                            // hit Corner
+                        case 3: Console.WriteLine("corner");
+                            stone.Hit();
+                            Ball.Transform.velocity.x = -Ball.Transform.velocity.x;
+                            Ball.Transform.velocity.y = -Ball.Transform.velocity.y;
+                            break;
 
+                    }
+                }
+            }
+
+            switch (Components.Collision.CheckCollision(Ball.Circle, Player.Rectangle))
+            {
+                //No hit 
+                case 0:
+                    Console.WriteLine("no hit");
+                    break;
+                // hit left or right 
+                case 1:
+                    Console.WriteLine("left right");
+                    Ball.Transform.velocity.x = -Ball.Transform.velocity.x;
+                    break;
+                // hit top or bottm
+                case 2:
+                    Console.WriteLine("top bottom");
+                    Ball.Transform.velocity.y = -Ball.Transform.velocity.y;
+                    break;
+                // hit Corner
+                case 3:
+                    Console.WriteLine("corner");
+                    Ball.Transform.velocity.x = -Ball.Transform.velocity.x;
+                    Ball.Transform.velocity.y = -Ball.Transform.velocity.y;
+                    break;
+
+            }
+        }
         private void Render()
         {
-            _window.Clear();
+            _window.Clear(Color.White);
+            _window.Draw(background);
 
             foreach (Entity entity in EntityManager.entities)
             {
-                entity.Sprite.Position = new Vector2f(entity.Transform.pos.x, entity.Transform.pos.y);
+                if(entity.Circle != null)
+                {
+                  entity.Circle.Position = new Vector2f(entity.Transform.pos.x, entity.Transform.pos.y);
+                    _window.Draw(entity.Circle);
+                }
+                else
+                {
+                    entity.Rectangle.Position = new Vector2f(entity.Transform.pos.x, entity.Transform.pos.y);
+                    _window.Draw(entity.Rectangle);
+                }
 
-                _window.Draw(entity.Sprite);
+                
             }
-
+            
             _window.Display();
         }
-
         public void Run()
         {
             while (_isRunning)
             {
                 EntityManager.Update();
-
-
                 Movement();
                 UserInput();
                 Render();
-
-
+                Collision();
+ 
             }
         }
 
