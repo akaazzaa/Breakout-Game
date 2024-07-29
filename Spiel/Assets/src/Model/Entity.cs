@@ -14,6 +14,7 @@ namespace Spiel.Assets.src.Model
         public bool _active = true;
         public uint _id = 0;
         public string _tag = "default";
+        public bool _Ismoving = false;
 
 
         public Components.Transform Transform { get; set; }

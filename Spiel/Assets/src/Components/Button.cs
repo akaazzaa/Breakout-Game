@@ -19,6 +19,15 @@ namespace Spiel.Assets.src.Components
             button.FillColor = bgColor;
 
         }
+
+        public Button(Vector2f size)
+        {
+            button.Size = size;
+        }
+        public void SetSize(Vector2f size)
+        {
+            button.Size = size;
+        }
         public void SetFont(Font font)
         {
             text.Font = font;

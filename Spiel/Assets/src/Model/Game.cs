@@ -9,7 +9,7 @@ namespace Spiel.Assets.src.Model
 {
     public class Game
     {
-        RenderWindow _window;
+        RenderWindow window;
         uint _frames;
         uint _wWidth, _wHeight;
         bool _isRunning = true;
@@ -18,9 +18,13 @@ namespace Spiel.Assets.src.Model
         Sprite background;
         Entity TestStone;
         EntityManager EntityManager = new EntityManager();
+        Text Text;
 
-        public Game()
+        public Game(RenderWindow window)
         {
+            this.window = window;
+            Text = new Text("Press Space to Start",new Font(ResourceLoader.Instance.FontLoder("Lemon Shake Shake.ttf")));
+            Text.Position = new Vector2f(window.Size.X / 2 - 150, window.Size.Y - 150);
             Init();
         }
         public void CreateLevel(Level level)
@@ -29,8 +33,8 @@ namespace Spiel.Assets.src.Model
             const float SCALE_FACTOR = 2.0f;
 
             // Laden der Textur
-            Texture texture = ResourceLoader.Instance.LoadTexture("big bricks\\bigBrickGreenHit.png");
-            CollisionTester.AddBitMask(texture);
+            Texture texture = ResourceLoader.Instance.LoadTexture("big bricks\\bigBrickGreen.png");
+            
             // Dynamische Berechnung der Blockgrößen basierend auf der Texturgröße
             float blockWidth = texture.Size.X * SCALE_FACTOR;
             float blockHeight = texture.Size.Y * SCALE_FACTOR;
@@ -58,6 +62,7 @@ namespace Spiel.Assets.src.Model
             }
             CreateBall();
             spawnplayer();
+            Run();
         }
         void Init()
         {
@@ -65,11 +70,11 @@ namespace Spiel.Assets.src.Model
             _wHeight = 1080;
             _frames = 60;
 
-            _window = new RenderWindow(new VideoMode(_wWidth, _wHeight), "SFML GameTEst", Styles.Default);
-            _window.SetFramerateLimit(_frames);
-            _window.KeyPressed += new EventHandler<KeyEventArgs>(OnKeyPressed);
-            _window.KeyReleased += new EventHandler<KeyEventArgs>(OnKeyRelease);
-            _window.Closed += new EventHandler(OnClose);
+            
+            window.SetFramerateLimit(_frames);
+            window.KeyPressed += new EventHandler<KeyEventArgs>(OnKeyPressed);
+            window.KeyReleased += new EventHandler<KeyEventArgs>(OnKeyRelease);
+            window.Closed += new EventHandler(OnClose);
 
             background = new Sprite(new Texture(ResourceLoader.Instance.LoadTexture("Background\\Background.jpg")));
 
@@ -80,22 +85,22 @@ namespace Spiel.Assets.src.Model
             CollisionTester.AddBitMask(texture);
             Entity ball = EntityManager.AddEntity("Ball");
 
-            ball.Circle = new CircleShape(texture.Size.Y / 2);
+            ball.Circle = new CircleShape(15);
             ball.Circle.Texture = texture;
-            ball.Transform = new Components.Transform(new Vec2(_wWidth / 2, _wHeight - 50), new Vec2(5, -5));
+            ball.Transform = new Components.Transform(new Vec2(_wWidth / 2 - ball.Circle.Radius , _wHeight - 70), new Vec2(0, 0));
             ball.Collision = new Components.Collision(ball.Circle.Texture.Size.X, ball.Circle.Texture.Size.Y);
             Ball = ball;
         }
         private void spawnplayer()
         {
-            Texture texture = new Texture(ResourceLoader.Instance.LoadTexture("Paddels\\Orange.png"));
+            Texture texture = new Texture(ResourceLoader.Instance.LoadTexture("Paddels\\Orange\\PaddelsOrangeForm (1).png"));
 
             Entity player = EntityManager.AddEntity("Player");
 
             player.Rectangle = new RectangleShape(new Vector2f(texture.Size.X + 60, texture.Size.Y + 30));
             player.Rectangle.Texture = texture;
 
-            player.Transform = new Components.Transform(new Vec2(_wWidth / 2, _wHeight - 50), new Vec2(5, 5));
+            player.Transform = new Components.Transform(new Vec2(_wWidth / 2 - player.Rectangle.Size.X / 2, _wHeight - 50), new Vec2(5, 5));
             player.Collision = new Components.Collision(player.Rectangle.Texture.Size.X, player.Rectangle.Texture.Size.Y);
             player.Input = new Components.Input();
             Player = player;
@@ -106,7 +111,7 @@ namespace Spiel.Assets.src.Model
             // Movement recht links
             if (Player.Input.left && Player.Transform.pos.x > -1)
             { Player.Transform.velocity.x = -10.0f; }
-            if (Player.Input.right && Player.Transform.pos.x + Player.Collision.x * 4 < _wWidth)
+            if (Player.Input.right && Player.Transform.pos.x + Player.Collision.x * 3 < _wWidth)
             { Player.Transform.velocity.x = 10.0f; }
 
             //Movement hoch runter
@@ -153,14 +158,20 @@ namespace Spiel.Assets.src.Model
                 case Keyboard.Key.A:
                     Player.Input.left = true;
                     break;
-                case Keyboard.Key.W:
-                    Player.Input.up = true;
-                    break;
-                case Keyboard.Key.S:
-                    Player.Input.down = true;
-                    break;
+                //case Keyboard.Key.W:
+                //    Player.Input.up = true;
+                //    break;
+                //case Keyboard.Key.S:
+                //    Player.Input.down = true;
+                //    break;
                 case Keyboard.Key.D:
                     Player.Input.right = true;
+                    break;
+                    case Keyboard.Key.Space:
+                    if (!Ball._Ismoving)
+                        Ball._Ismoving = true;
+                        
+                    Ball.Transform.velocity = new Vec2(6, -6);
                     break;
             }
         }
@@ -171,12 +182,12 @@ namespace Spiel.Assets.src.Model
                 case Keyboard.Key.A:
                     Player.Input.left = false;
                     break;
-                case Keyboard.Key.W:
-                    Player.Input.up = false;
-                    break;
-                case Keyboard.Key.S:
-                    Player.Input.down = false;
-                    break;
+                //case Keyboard.Key.W:
+                //    Player.Input.up = false;
+                //    break;
+                //case Keyboard.Key.S:
+                //    Player.Input.down = false;
+                //    break;
                 case Keyboard.Key.D:
                     Player.Input.right = false;
                     break;
@@ -190,7 +201,7 @@ namespace Spiel.Assets.src.Model
         }
         private void UserInput()
         {
-            _window.DispatchEvents();
+            window.DispatchEvents();
         }
         void Collision()
         {
@@ -256,35 +267,43 @@ namespace Spiel.Assets.src.Model
         }
         private void Render()
         {
-            _window.Clear(Color.White);
-            _window.Draw(background);
-
+            window.Clear(Color.White);
+            window.Draw(background);
+           
             foreach (Entity entity in EntityManager.entities)
             {
                 if (entity.Circle != null)
                 {
                     entity.Circle.Position = new Vector2f(entity.Transform.pos.x, entity.Transform.pos.y);
-                    _window.Draw(entity.Circle);
+                    window.Draw(entity.Circle);
                 }
                 else
                 {
                     entity.Rectangle.Position = new Vector2f(entity.Transform.pos.x, entity.Transform.pos.y);
-                    _window.Draw(entity.Rectangle);
+                    window.Draw(entity.Rectangle);
                 }
 
 
             }
-
-            _window.Display();
+            if (!Ball._Ismoving)
+            {
+                window.Draw(Text);
+            }
+            
+            window.Display();
         }
         public void Run()
         {
             while (_isRunning)
             {
                 EntityManager.Update();
-                Movement();
+                
                 UserInput();
+
+                Movement();
+
                 Render();
+
                 Collision();
 
             }
