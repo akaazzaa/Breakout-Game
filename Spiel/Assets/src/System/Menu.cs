@@ -1,4 +1,5 @@
-﻿using SFML.Graphics;
+﻿using SFML.Audio;
+using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
 using Spiel.Assets.src.Components;
@@ -19,31 +20,42 @@ namespace Spiel.Assets.src.System
         Game game;
         Level level;
         Settings settings;
-        uint wWidth ,wHeight ;
+        Sound sound;
+        SoundBuffer buffer;
+        
 
+
+        uint wWidth ,wHeight ;
+        uint frames;
         public Menu()
         {
             Init();
         }
         public void Init()
         {
-            wWidth = 1920;
+            wWidth = 1400;
             wHeight = 1080;
+            frames = 60;
             // window erstellen
             window = new RenderWindow(new VideoMode(wWidth, wHeight), "SFML Main Menu");
+            window.SetFramerateLimit(frames); 
             window.Closed += new EventHandler(OnClose);
             window.MouseMoved += Window_MouseMoved;
             window.MouseButtonPressed += Window_MouseButtonPressed;
 
+            buffer = new SoundBuffer("C:\\Users\\dgami\\source\\repos\\Spiel\\Spiel\\Assets\\Resources\\Sounds\\pixelgroove-77930.mp3");
 
+            sound = new Sound(buffer);
+            sound.Volume = 1f;
+            sound.Play();
 
             // 1: Rows , 1: Column ,
-            level = new Level(13, 15, 0, 0, 40, 20, 0, 0);
+            level = new Level(10, 1, 0, 0, 40, 20, 0, 0);
 
 
 
             // Hintergund Laden und Instantzieren
-            background = new Sprite(ResourceLoader.Instance.LoadTexture("UI\\gray-textured-wall.jpg")); ;
+            background = new Sprite(ResourceLoader.Instance.LoadTexture("UI\\gray-textured-wall.jpg")); 
            
             CreateButtons();
 
@@ -51,9 +63,10 @@ namespace Spiel.Assets.src.System
 
         private void Window_MouseButtonPressed(object? sender, MouseButtonEventArgs e)
         {
-            RenderWindow window = (RenderWindow)sender;
+            
             if (playButton.IsMouseOver(window)) 
             {
+                sound.Stop();
                 game = new Game(window);
                 game.CreateLevel(level);
                 
@@ -70,10 +83,6 @@ namespace Spiel.Assets.src.System
                 settings.SettingsStart();
 
             }
-
-
-
-
         }
 
         private void CreateButtons()

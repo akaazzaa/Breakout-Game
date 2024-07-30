@@ -1,10 +1,13 @@
-﻿using SFML.Graphics;
+﻿using SFML.Audio;
+using SFML.Graphics;
+using SFML.System;
 using SFML.Window;
 using Spiel.Assets.src.Components;
 using Spiel.Assets.src.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection.Emit;
 using System.Resources;
 using System.Text;
 using System.Threading.Tasks;
@@ -14,15 +17,21 @@ namespace Spiel.Assets.src.System
 {
     public class Settings
     {
+        private static readonly string ConfigPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", "Config", "Config.txt");
+
+        private bool isBackClicked = false;
+
         public string GameTitle { get; set; }
         public int WindowWidth { get; set; }
         public int WindowHeight { get; set; }
+        
+        
         RenderWindow window;
         Sprite background;
         SettingsPanel settingsPanel;
+        Button backbutton;
 
-
-        private static readonly string ConfigPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", "Config", "Config.txt");
+       
 
 
         public Settings(RenderWindow window) 
@@ -39,6 +48,10 @@ namespace Spiel.Assets.src.System
             window.MouseButtonPressed += Window_MouseButtonPressed;
 
             background = new Sprite(ResourceLoader.Instance.LoadTexture("UI\\gray-textured-wall.jpg"));
+
+            backbutton = new Button(new Vector2f(50,50));
+            backbutton.SetTexture(ResourceLoader.Instance.LoadTexture("UI\\Square Buttons\\Square Buttons\\Back Square Button.png"));
+            backbutton.SetPosition(new Vector2f(70, 20 ));
             CreatePanel();
         }
 
@@ -55,7 +68,7 @@ namespace Spiel.Assets.src.System
         {
 
             // Create menu loop
-            while (window.IsOpen)
+            while (!isBackClicked)
             {
                 // Check for events
                 window.DispatchEvents();
@@ -66,8 +79,9 @@ namespace Spiel.Assets.src.System
                 window.Clear();
                 // Zeichnet 
                 window.Draw(background);
-                // Eingener Button
                 settingsPanel.Draw(window);
+                backbutton.Draw(window);
+
 
                 // Display the window
                 window.Display();
@@ -82,12 +96,23 @@ namespace Spiel.Assets.src.System
 
         private void Window_MouseButtonPressed(object? sender, MouseButtonEventArgs e)
         {
-            
+            if (backbutton.IsMouseOver(window))
+            {
+                isBackClicked = true;
+            }
+
         }
 
         private void Window_MouseMoved(object? sender, MouseMoveEventArgs e)
         {
-           
+            if (backbutton.IsMouseOver(window))
+            {
+                backbutton.SetTexture(ResourceLoader.Instance.LoadTexture("UI\\Square Buttons\\Colored Square Buttons\\Back col_Square Button.png"));
+            }
+            else
+            {
+                backbutton.SetTexture(ResourceLoader.Instance.LoadTexture("UI\\Square Buttons\\Square Buttons\\Back Square Button.png"));
+            }
         }
 
         public void Load()
